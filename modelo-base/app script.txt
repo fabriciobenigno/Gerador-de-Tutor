@@ -1,0 +1,116 @@
+const ID_PLANILHA = "1gZpTmM7-ejtpHDzLUiKoodv--ukKq0QxBID22i6jhck";
+const NOME_ABA = "Página1"; // CONFIRME se sua aba se chama exatamente Página1
+
+function doPost(e) {
+  try {
+
+    const sheet = SpreadsheetApp
+      .openById(ID_PLANILHA)
+      .getSheetByName(NOME_ABA);
+
+    // Captura dos dados
+    const nome = e.parameter.Nome;
+    const telefone = e.parameter.Telefone;
+    const cpf = e.parameter.CPF;
+    const email = e.parameter.Email;
+    const nascimento = e.parameter["Data de Nascimento"];
+    const endereco = e.parameter.Endereço;
+    const cep = e.parameter.CEP;
+    const curso = e.parameter.Curso;
+
+    // Salva na planilha
+    sheet.appendRow([
+      nome,
+      telefone,
+      cpf,
+      email,
+      nascimento,
+      endereco,
+      cep,
+      curso
+    ]);
+
+    // ENVIO DE EMAIL AUTOMÁTICO
+    MailApp.sendEmail({
+      to: "fabriciobenigno803@gmail.com",
+      subject: "🚀 Nova Inscrição Recebida",
+      htmlBody: `
+        <div style="font-family:Arial,sans-serif">
+          <h2 style="color:#004aad;">Nova Inscrição Recebida</h2>
+          <hr>
+          <p><strong>Nome:</strong> ${nome}</p>
+          <p><strong>Telefone:</strong> ${telefone}</p>
+          <p><strong>CPF:</strong> ${cpf}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Data de Nascimento:</strong> ${nascimento}</p>
+          <p><strong>Endereço:</strong> ${endereco}</p>
+          <p><strong>CEP:</strong> ${cep}</p>
+          <p><strong>Curso:</strong> ${curso}</p>
+          <hr>
+          <p style="color:gray;font-size:12px">
+            Notificação automática do sistema de inscrição.
+          </p>
+        </div>
+      `
+    });
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: "sucesso" }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (erro) {
+
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        status: "erro",
+        message: erro.toString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+
+function doGet(e) {
+  try {
+
+    const cpfBusca = e.parameter.cpf;
+
+    if (!cpfBusca) {
+      return ContentService
+        .createTextOutput(JSON.stringify(null))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const sheet = SpreadsheetApp
+      .openById(ID_PLANILHA)
+      .getSheetByName(NOME_ABA);
+
+    const dados = sheet.getDataRange().getValues();
+    const cabecalho = dados[0];
+
+    for (let i = 1; i < dados.length; i++) {
+
+      if (dados[i][2] == cpfBusca) {
+
+        let aluno = {};
+
+        cabecalho.forEach((titulo, index) => {
+          aluno[titulo] = dados[i][index];
+        });
+
+        return ContentService
+          .createTextOutput(JSON.stringify(aluno))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify(null))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (erro) {
+    return ContentService
+      .createTextOutput(JSON.stringify(null))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}

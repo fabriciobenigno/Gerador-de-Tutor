@@ -1,1 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Inscrição Curso</title>
+<link rel="icon" type="image/x-icon" href="icone.ico">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Roboto',sans-serif}
+html,body{height:100%}
+body{
+  background:linear-gradient(135deg,#004aad,#007bff);
+  display:flex;justify-content:center;align-items:center;
+  padding:20px;overflow:auto;
+}
+#splash{
+  position:fixed;inset:0;background:#fff;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  z-index:9999;transition:opacity .6s
+}
+#splash img{width:320px;margin-bottom:20px}
+#splash p{color:#004aad;font-size:1.25rem;font-weight:500}
+#app{
+  display:flex;background:#fff;border-radius:14px;
+  box-shadow:0 12px 30px rgba(0,0,0,.18);
+  max-width:1000px;width:100%;overflow:hidden;
+  opacity:0;transform:scale(.98);transition:.5s
+}
+#tutor{
+  flex:0 0 380px;padding:28px 22px;
+  display:flex;flex-direction:column;
+  align-items:center;background:#f6f9ff
+}
+#tutor #logo-tutor{width:300px;margin-bottom:14px}
+#tutor img.tutor-photo{
+  width:200px;height:200px;border-radius:50%;
+  margin-bottom:14px;object-fit:cover
+}
+.tutor-name{color:#004aad;font-size:1.4rem;font-weight:700;text-align:center}
+.tutor-role{color:#333;font-size:1rem;text-align:center;margin-bottom:16px}
+.contact-list{display:flex;flex-direction:column;gap:10px}
+.contact-btn{
+  display:flex;align-items:center;gap:10px;
+  justify-content:center;background:#fff;border-radius:8px;
+  padding:10px 14px;color:#004aad;text-decoration:none;
+  font-weight:600;box-shadow:0 6px 14px rgba(0,0,0,0.06);
+  width:160px;transition:.2s
+}
+.contact-btn img{width:32px;height:32px}
+.contact-btn:hover{
+  transform:translateY(-4px);
+  background:#007bff;color:#fff
+}
+.contact-btn:hover img{filter:brightness(0) invert(1)}
+#form-container{flex:1;padding:28px 30px;display:flex;flex-direction:column;justify-content:center}
+#form-container h1{color:#004aad;font-size:1.9rem;margin-bottom:12px}
+form{display:flex;flex-direction:column;gap:10px}
+input{
+  width:100%;padding:12px;border-radius:8px;
+  border:1px solid #d0d6e0;font-size:1rem
+}
+input:focus{
+  outline:none;border-color:#007bff;
+  box-shadow:0 4px 14px rgba(0,123,255,0.08)
+}
+.btn{
+  background:#007bff;color:#fff;border:none;
+  padding:12px;border-radius:8px;
+  font-weight:700;cursor:pointer;position:relative
+}
+.btn:hover{background:#0056b3}
+.btn.loading{
+  background:#0056b3;
+  cursor:not-allowed;
+  opacity:.8;
+}
+.btn.loading::after{
+  content:"";
+  width:18px;
+  height:18px;
+  border:3px solid #fff;
+  border-top:3px solid transparent;
+  border-radius:50%;
+  position:absolute;
+  right:15px;
+  top:50%;
+  transform:translateY(-50%);
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{
+  from{transform:translateY(-50%) rotate(0deg)}
+  to{transform:translateY(-50%) rotate(360deg)}
+}
+#congrats{
+  position:fixed;inset:0;display:none;
+  align-items:center;justify-content:center;
+  z-index:9998
+}
+#congrats video{
+  position:absolute;width:100%;height:100%;object-fit:cover
+}
+#congrats-card{
+  position:relative;background:rgba(255,255,255,0.9);
+  padding:36px;border-radius:14px;text-align:center;max-width:520px
+}
+#congrats-card h2{color:#004aad;margin-bottom:10px}
+@media (max-width:1024px){#app{flex-direction:column}}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <img src="simbolo.png">
+  <p>Carregando...</p>
+</div>
+
+<div id="app" style="display:none">
+
+<aside id="tutor">
+  <img id="logo-tutor" src="simbolo.png">
+  <img class="tutor-photo" src="fabricio-benigno.jpg">
+  <div class="tutor-name">Fabricio Benigno</div>
+  <div class="tutor-role">Tutor e Orientador</div>
+
+  <div class="contact-list">
+    <a class="contact-btn" href="https://wa.me/5585921695620" target="_blank">
+      <img src="whatsapp.ico"> WhatsApp
+    </a>
+    <a class="contact-btn" href="https://instagram.com/fabricio_benigno" target="_blank">
+      <img src="instagram.ico"> Instagram
+    </a>
+  </div>
+</aside>
+
+<section id="form-container">
+  <h1>Cadastro de Inscrição</h1>
+  <form id="form-inscricao">
+    <input id="nome" type="text" placeholder="Nome Completo" required>
+    <input id="telefone" type="tel" inputmode="numeric" placeholder="Telefone (somente números)" required>
+    <input id="cpf" type="text" inputmode="numeric" placeholder="CPF" required>
+    <input id="email" type="email" placeholder="Email" required>
+    <input id="nascimento" type="text" inputmode="numeric" placeholder="Data de Nascimento (dd-mm-aaaa)" required>
+    <input id="endereco" type="text" placeholder="Endereço" required>
+    <input id="cep" type="text" inputmode="numeric" placeholder="CEP" required>
+    <input id="curso" type="text" placeholder="Curso" required>
+    <button type="submit" class="btn" id="btnEnviar">
+      <span id="btnTexto">Enviar Inscrição</span>
+    </button>
+  </form>
+</section>
+
+</div>
+
+<div id="congrats">
+  <video id="videoCongrats" muted playsinline preload="auto">
+    <source src="confetes.mp4" type="video/mp4">
+  </video>
+  <div id="congrats-card">
+    <h2 id="congrats-title"></h2>
+    <p>Estarei aqui para te auxiliar em sua jornada acadêmica.</p>
+  </div>
+</div>
+
+<script>
+
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzzmst4tMJOHtskHDkgb-Pd8sUrdTCzxnc0HAZ_qXBrl_PDSNkPnWzTotIEv8eCgaR5tg/exec";
+const ESPACO_SUPERIOR_MOBILE = 5;
+
+function ajustarEspacoMobile(){
+  const app = document.getElementById("app");
+  if(window.innerWidth <= 768){
+    document.body.style.alignItems = "flex-start";
+    app.style.marginTop = ESPACO_SUPERIOR_MOBILE + "px";
+  }else{
+    document.body.style.alignItems = "center";
+    app.style.marginTop = "0px";
+  }
+}
+
+window.addEventListener("load",()=>{
+  ajustarEspacoMobile();
+  setTimeout(()=>{
+    document.getElementById("splash").style.display="none";
+    const app=document.getElementById("app");
+    app.style.display="flex";
+    app.style.opacity=1;
+  },1200);
+});
+
+window.addEventListener("resize", ajustarEspacoMobile);
+
+cpf.addEventListener("input", function () {
+  let v = this.value.replace(/\D/g, "");
+  v = v.replace(/(\d{3})(\d)/, "$1.$2");
+  v = v.replace(/(\d{3})(\d)/, "$1.$2");
+  v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+  this.value = v;
+});
+
+telefone.addEventListener("input", function () {
+  this.value = this.value.replace(/\D/g, "");
+});
+
+nascimento.addEventListener("input", function () {
+  let v = this.value.replace(/\D/g, "");
+  if (v.length > 2) v = v.slice(0,2) + "-" + v.slice(2);
+  if (v.length > 5) v = v.slice(0,5) + "-" + v.slice(5,9);
+  this.value = v;
+});
+
+document.getElementById("form-inscricao").addEventListener("submit", async function(e){
+  e.preventDefault();
+
+  const btn = document.getElementById("btnEnviar");
+  const btnTexto = document.getElementById("btnTexto");
+
+  btn.classList.add("loading");
+  btn.disabled = true;
+  btnTexto.textContent = "Enviando...";
+
+  const formData = new FormData();
+  formData.append("Nome", nome.value);
+  formData.append("Telefone", telefone.value);
+  formData.append("CPF", cpf.value);
+  formData.append("Email", email.value);
+  formData.append("Data de Nascimento", nascimento.value);
+  formData.append("Endereço", endereco.value);
+  formData.append("CEP", cep.value);
+  formData.append("Curso", curso.value);
+
+  try{
+    const response = await fetch(WEB_APP_URL,{ method:"POST", body: formData });
+    const result = await response.json();
+
+    if(result.status === "sucesso"){
+      const nomeCompleto = nome.value;
+      this.reset();
+      setTimeout(()=>{
+        showCongrats(nomeCompleto);
+      },1200);
+    }else{
+      alert("Erro ao enviar inscrição.");
+      resetBotao();
+    }
+
+  }catch(error){
+    alert("Erro ao enviar inscrição. Verifique conexão.");
+    resetBotao();
+  }
+
+  function resetBotao(){
+    btn.classList.remove("loading");
+    btn.disabled = false;
+    btnTexto.textContent = "Enviar Inscrição";
+  }
+});
+
+function showCongrats(nomeCompleto){
+  const partes = nomeCompleto.split(" ");
+  document.getElementById("congrats-title").textContent =
+    `Parabéns ${partes[0]} ${partes[1] || ""}!`;
+
+  const congrats = document.getElementById("congrats");
+  const video = document.getElementById("videoCongrats");
+
+  congrats.style.display="flex";
+
+  video.currentTime = 0;
+  video.play().catch(()=>{});
+
+  video.addEventListener("pause", () => {
+    video.play().catch(()=>{});
+  });
+
+  let redirecionado = false;
+
+  video.addEventListener("timeupdate", function(){
+    if(video.currentTime >= 27 && !redirecionado){
+      redirecionado = true;
+      window.location.href = "https://instagram.com/fabricio_benigno";
+    }
+  });
+}
+
+</script>
+
+</body>
+</html>

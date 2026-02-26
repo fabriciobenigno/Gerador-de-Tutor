@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Administrativo</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#004aad">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Roboto',sans-serif}
+
+body{
+  background:linear-gradient(135deg,#004aad,#007bff);
+  display:flex;
+  justify-content:center;
+  padding:40px;
+}
+
+.container{
+  background:#fff;
+  width:100%;
+  max-width:780px;
+  padding:30px;
+  border-radius:16px;
+  box-shadow:0 15px 40px rgba(0,0,0,.2);
+}
+
+h1{color:#004aad;margin-bottom:25px;}
+
+input,select{
+  width:100%;
+  padding:11px;
+  margin-bottom:12px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
+
+input:focus,select:focus{
+  outline:none;
+  border-color:#007bff;
+}
+
+button{
+  padding:10px 16px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  background:#007bff;
+  color:#fff;
+  font-weight:600;
+  transition:0.3s;
+  margin-right:8px;
+}
+
+button:hover{background:#0056b3;}
+
+.buscar-area{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.status{font-weight:600;font-size:14px;}
+.status.sucesso{color:#1e7e34;}
+.status.erro{color:#c82333;}
+
+.section-title{
+  margin-top:20px;
+  margin-bottom:10px;
+  font-weight:700;
+  color:#004aad;
+}
+
+textarea{
+  width:100%;
+  height:220px;
+  margin-top:15px;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  resize:none;
+  font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Painel Administrativo</h1>
+
+<div class="buscar-area">
+  <input id="buscaCpf" type="tel" inputmode="numeric" maxlength="14" placeholder="Digite o CPF para buscar">
+  <button onclick="buscarAluno()">Buscar</button>
+  <span id="statusBusca" class="status"></span>
+</div>
+
+<div class="section-title">Informações Administrativas</div>
+
+<select id="modalidade">
+<option value="">Selecione Modalidade</option>
+<option>EAD-Semi presencial</option>
+<option>Híbrido</option>
+<option>Pós Graduação</option>
+<option>Técnico</option>
+<option>Profissionalizante</option>
+</select>
+
+<select id="bolsa" onchange="verificarBolsa()">
+<option value="">Selecione Bolsa</option>
+<option>60% + 10%</option>
+<option>70% + 10%</option>
+<option value="outra">Outra</option>
+</select>
+
+<input id="bolsaOutra" placeholder="Digite outra bolsa" style="display:none;">
+
+<input id="candidato" type="tel" inputmode="numeric" maxlength="20" placeholder="Digite o número do Candidato">
+
+<input id="primeiraMensalidade" type="tel" inputmode="numeric" placeholder="Primeira Mensalidade">
+<input id="demaisMensalidades" type="tel" inputmode="numeric" placeholder="Demais Mensalidades">
+
+<select id="comoConheceu" onchange="verificarConheceu()">
+<option value="">Como nos conheceu</option>
+<option>Candidato veio ao polo</option>
+<option>Base pessoal</option>
+<option>Arrastão de base</option>
+<option value="outra">Outra</option>
+</select>
+
+<input id="conheceuOutra" placeholder="Digite outra origem" style="display:none;">
+
+<div class="section-title">Templates</div>
+<button onclick="gerarTemplate1()">Gerar Template 1</button>
+<button onclick="gerarTemplate2()">Gerar Template 2</button>
+
+<textarea id="resultado"></textarea>
+
+</div>
+
+<script>
+const WEB_APP_URL="https://script.google.com/macros/s/AKfycbzzmst4tMJOHtskHDkgb-Pd8sUrdTCzxnc0HAZ_qXBrl_PDSNkPnWzTotIEv8eCgaR5tg/exec";
+
+let aluno=null;
+let ultimaBusca="";
+const status=document.getElementById("statusBusca");
+const resultado=document.getElementById("resultado");
+
+/* Bloqueia edição no celular */
+function dispositivoMovel(){
+return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+}
+if(dispositivoMovel()){
+resultado.setAttribute("readonly",true);
+}
+
+/* CPF máscara */
+buscaCpf.addEventListener("input",function(){
+let v=this.value.replace(/\D/g,"");
+v=v.replace(/(\d{3})(\d)/,"$1.$2");
+v=v.replace(/(\d{3})(\d)/,"$1.$2");
+v=v.replace(/(\d{3})(\d{1,2})$/,"$1-$2");
+this.value=v;
+let cpfNumerico=v.replace(/\D/g,"");
+if(cpfNumerico.length===11 && cpfNumerico!==ultimaBusca){
+ultimaBusca=cpfNumerico;
+buscarAluno();
+}
+});
+
+async function buscarAluno(){
+if(!buscaCpf.value){
+status.textContent="⚠ Digite um CPF";
+status.className="status erro";
+return;
+}
+status.textContent="Buscando...";
+try{
+const response=await fetch(WEB_APP_URL+"?cpf="+buscaCpf.value);
+aluno=await response.json();
+if(!aluno){
+status.textContent="❌ Não encontrado";
+status.className="status erro";
+return;
+}
+status.textContent="✔ Aluno encontrado";
+status.className="status sucesso";
+}catch{
+status.textContent="❌ Erro na conexão";
+status.className="status erro";
+}
+}
+
+function verificarBolsa(){
+bolsaOutra.style.display=bolsa.value==="outra"?"block":"none";
+}
+
+function verificarConheceu(){
+conheceuOutra.style.display=comoConheceu.value==="outra"?"block":"none";
+}
+
+candidato.addEventListener("input",function(){
+this.value=this.value.replace(/\D/g,"");
+});
+
+function formatarMoeda(campo){
+campo.addEventListener("input",function(){
+let valor=this.value.replace(/\D/g,"");
+if(valor===""){this.value="";return;}
+valor=(parseInt(valor)/100).toFixed(2).replace(".",",");
+this.value=valor;
+});
+}
+formatarMoeda(primeiraMensalidade);
+formatarMoeda(demaisMensalidades);
+
+function validarCampos(){
+if(!aluno) return "Busque um aluno primeiro.";
+if(!modalidade.value) return "Selecione a Modalidade.";
+if(!bolsa.value) return "Selecione a Bolsa.";
+if(bolsa.value==="outra" && !bolsaOutra.value) return "Digite a outra Bolsa.";
+if(!candidato.value) return "Digite o número do Candidato.";
+if(!primeiraMensalidade.value) return "Digite a Primeira Mensalidade.";
+if(!demaisMensalidades.value) return "Digite as Demais Mensalidades.";
+if(!comoConheceu.value) return "Selecione como conheceu.";
+if(comoConheceu.value==="outra" && !conheceuOutra.value) return "Digite a origem.";
+return null;
+}
+
+function copiarAutomatico(texto){
+navigator.clipboard.writeText(texto);
+status.textContent="✔ Gerado e copiado automaticamente";
+status.className="status sucesso";
+setTimeout(()=>status.textContent="",3000);
+}
+
+function gerarTemplate1(){
+const erro=validarCampos();
+if(erro){
+status.textContent="⚠ "+erro;
+status.className="status erro";
+return;
+}
+
+const texto=`NOME COMPLETO:${aluno.Nome}
+CANDIDATO:${candidato.value}
+CURSO:${aluno.Curso}
+MODALIDADE:${modalidade.value}
+PRIMEIRA MENSALIDADE:${primeiraMensalidade.value}
+BOLSA:${bolsa.value==="outra"?bolsaOutra.value:bolsa.value}
+DEMAIS MENSALIDADES:${demaisMensalidades.value}
+POLO:Caucaia
+COMO NOS CONHECEU:${comoConheceu.value==="outra"?conheceuOutra.value:comoConheceu.value}
+TELEFONE COM DDD:${aluno.Telefone}
+TUTOR:Fabricio Benigno 🥷
+
+Rede Pocci 🚀🚀`;
+
+resultado.value=texto;
+copiarAutomatico(texto);
+}
+
+function gerarTemplate2(){
+if(!aluno){
+status.textContent="⚠ Busque um aluno primeiro";
+status.className="status erro";
+return;
+}
+
+let data="";
+if(aluno["Data de Nascimento"]){
+data=new Date(aluno["Data de Nascimento"]).toLocaleDateString("pt-BR");
+}
+
+const texto=`Nome:${aluno.Nome}
+Telefone:${aluno.Telefone}
+CPF:${aluno.CPF}
+Email:${aluno.Email}
+Data de Nascimento:${data}
+Endereço:${aluno.Endereço}
+Cep:${aluno.CEP}
+Curso:${aluno.Curso}`;
+
+resultado.value=texto;
+copiarAutomatico(texto);
+}
+
+if("serviceWorker" in navigator){
+navigator.serviceWorker.register("sw.js");
+}
+</script>
+
+</body>
+</html>
