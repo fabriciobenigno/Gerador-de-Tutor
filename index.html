@@ -1,190 +1,140 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Gerador Interno do Repositório</title>
+<title>Gerador de Projeto</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
 <style>
 body{
 font-family:Arial;
-background:linear-gradient(135deg,#004aad,#007bff);
+background:#0f172a;
+color:white;
+text-align:center;
 padding:40px;
-color:#fff;
-}
-.container{
-background:#fff;
-color:#000;
-padding:30px;
-border-radius:12px;
-max-width:1000px;
-margin:auto;
 }
 input{
-width:100%;
 padding:10px;
-margin-bottom:10px;
-border-radius:6px;
-border:1px solid #ccc;
+margin:8px;
+width:320px;
+border-radius:8px;
+border:none;
 }
 button{
-padding:12px;
+padding:12px 20px;
+border-radius:8px;
 border:none;
-border-radius:6px;
-background:#007bff;
-color:#fff;
+background:#2563eb;
+color:white;
 cursor:pointer;
 font-weight:bold;
 }
-button:hover{background:#0056b3}
-.section{margin-bottom:25px;}
+.box{
+background:#1e293b;
+padding:25px;
+border-radius:15px;
+display:inline-block;
+}
 </style>
 </head>
 <body>
 
-<div class="container">
+<div class="box">
+<h2>Gerador de Projeto</h2>
 
-<h2>Gerador Automático (Arquivos Locais do Repositório)</h2>
+<input id="projeto" placeholder="Nome do Projeto"><br>
+<input id="tutor" placeholder="Nome do Tutor"><br>
+<input id="whats" placeholder="Link WhatsApp"><br>
+<input id="insta" placeholder="Link Instagram"><br>
+<input id="appurl" placeholder="URL App Script"><br>
+<input id="sheetid" placeholder="ID da Planilha"><br><br>
 
-<div class="section">
-<h3>Dados do Tutor</h3>
-<input id="nomeTutor" placeholder="Nome do Tutor">
-<input id="whatsapp" placeholder="Link WhatsApp completo">
-<input id="instagram" placeholder="Link Instagram completo">
-</div>
+<label>Foto do Tutor:</label><br>
+<input type="file" id="foto" accept="image/*"><br><br>
 
-<div class="section">
-<h3>Dados Técnicos</h3>
-<input id="urlScript" placeholder="URL do App Script">
-<input id="idPlanilha" placeholder="ID da Planilha">
-<input id="gmail" placeholder="Gmail para Notificação">
-</div>
-
-<button onclick="gerarProjeto()">Gerar Projeto ZIP</button>
-
+<button onclick="gerar()">GERAR PROJETO</button>
 </div>
 
 <script>
+async function gerar(){
 
-function gerarNomeLimpo(nome){
-return nome
-.toLowerCase()
-.normalize("NFD")
-.replace(/[\u0300-\u036f]/g,"")
-.replace(/[^a-z0-9\s]/g,"")
-.replace(/\s+/g,"-");
-}
+const projeto = document.getElementById("projeto").value.trim();
+const tutor = document.getElementById("tutor").value.trim();
+const whats = document.getElementById("whats").value.trim();
+const insta = document.getElementById("insta").value.trim();
+const appurl = document.getElementById("appurl").value.trim();
+const sheetid = document.getElementById("sheetid").value.trim();
+const fotoFile = document.getElementById("foto").files[0];
 
-async function fetchTexto(caminho){
-const res = await fetch(caminho);
-return await res.text();
-}
-
-async function fetchBinario(caminho){
-const res = await fetch(caminho);
-return await res.arrayBuffer();
-}
-
-async function gerarProjeto(){
-
-const nome = document.getElementById("nomeTutor").value;
-const whatsapp = document.getElementById("whatsapp").value;
-const instagram = document.getElementById("instagram").value;
-const webApp = document.getElementById("urlScript").value;
-const idPlanilha = document.getElementById("idPlanilha").value;
-const gmail = document.getElementById("gmail").value;
-
-if(!nome){
-alert("Digite o nome do tutor.");
+if(!projeto || !tutor){
+alert("Preencha Projeto e Tutor");
 return;
 }
 
-const nomeLimpo = gerarNomeLimpo(nome);
-const nomeFotoFinal = "foto-"+nomeLimpo+".jpg";
-
 const zip = new JSZip();
-const raiz = zip.folder("Projeto_"+nomeLimpo);
-const pastaAssets = raiz.folder("assets");
-const pastaPWA = raiz.folder("pwa");
 
-/* BUSCAR ARQUIVOS DO MODELO-BASE */
-let index1 = await fetchTexto("modelo-base/index.html");
-let index2 = await fetchTexto("modelo-base/index2.html");
-let appscript = await fetchTexto("modelo-base/appscript.txt");
-
-/* SUBSTITUIÇÕES */
-index1 = index1.replace(/Fabricio Benigno/g,nome);
-index2 = index2.replace(/Fabricio Benigno/g,nome);
-
-if(whatsapp){
-index1 = index1.replace(/https:\/\/wa\.me\/[0-9]+/g, whatsapp);
-index2 = index2.replace(/https:\/\/wa\.me\/[0-9]+/g, whatsapp);
+async function fetchText(path){
+return await fetch(path).then(r=>r.text());
 }
 
-if(instagram){
-index1 = index1.replace(/https:\/\/(www\.)?instagram\.com\/[^"]+/g, instagram);
-index2 = index2.replace(/https:\/\/(www\.)?instagram\.com\/[^"]+/g, instagram);
+async function fetchBlob(path){
+return await fetch(path).then(r=>r.blob());
 }
 
-if(webApp){
-index1 = index1.replace(/const WEB_APP_URL\s*=\s*".*?";/g,'const WEB_APP_URL = "'+webApp+'";');
-index2 = index2.replace(/const WEB_APP_URL\s*=\s*".*?";/g,'const WEB_APP_URL = "'+webApp+'";');
-}
+let index1 = await fetchText("modelo-base/index.html");
+let index2 = await fetchText("modelo-base/index2.html");
+let appscript = await fetchText("modelo-base/appscript.txt");
 
-if(idPlanilha){
-appscript = appscript.replace(/const ID_PLANILHA\s*=\s*".*?";/g,'const ID_PLANILHA = "'+idPlanilha+'";');
-}
+index1 = index1
+.replaceAll("{{TUTOR}}", tutor)
+.replaceAll("{{WHATS}}", whats)
+.replaceAll("{{INSTA}}", insta)
+.replaceAll("{{APPURL}}", appurl)
+.replaceAll("{{FOTO}}", tutor.replace(/\s+/g,'-').toLowerCase()+".jpg");
 
-if(gmail){
-appscript = appscript.replace(/to:\s*".*?"/g,'to: "'+gmail+'"');
-}
+index2 = index2
+.replaceAll("{{APPURL}}", appurl)
+.replaceAll("{{SHEETID}}", sheetid);
 
-/* TROCAR FOTO */
-index1 = index1.replace(/src="[^"]+\.(jpg|jpeg|png|webp)"/g,'src="assets/'+nomeFotoFinal+'"');
-index2 = index2.replace(/src="[^"]+\.(jpg|jpeg|png|webp)"/g,'src="../assets/'+nomeFotoFinal+'"');
+appscript = appscript
+.replaceAll("{{GMAIL}}","seuemail@gmail.com")
+.replaceAll("{{APPURL}}",appurl)
+.replaceAll("{{SHEETID}}",sheetid);
 
-/* SALVAR TEXTO */
-raiz.file("index.html", index1);
-pastaPWA.file("index2.html", index2);
-raiz.file("appscript.txt", appscript);
+zip.file("index.html", index1);
 
-/* ARQUIVOS BINÁRIOS */
-const arquivosPadrao = [
+const painel = zip.folder("painel");
+painel.file("index2.html", index2);
+painel.file("manifest.json", await fetchText("modelo-base/manifest.json"));
+painel.file("sw.js", await fetchText("modelo-base/sw.js"));
+
+zip.file("appscript.txt", appscript);
+
+const arquivos = [
 "simbolo.png",
 "icone.ico",
 "whatsapp.ico",
 "instagram.ico",
-"confetes.mp4",
-"manifest.json",
-"sw.js",
-"foto-tutor.jpg"
+"confetes.mp4"
 ];
 
-for(let arquivo of arquivosPadrao){
-
-let bin = await fetchBinario("modelo-base/"+arquivo);
-
-if(arquivo === "manifest.json" || arquivo === "sw.js"){
-pastaPWA.file(arquivo, bin);
-}
-else if(arquivo === "foto-tutor.jpg"){
-pastaAssets.file(nomeFotoFinal, bin);
-}
-else{
-pastaAssets.file(arquivo, bin);
+for(let arq of arquivos){
+zip.file(arq, await fetchBlob("modelo-base/"+arq));
 }
 
+if(fotoFile){
+zip.file(tutor.replace(/\s+/g,'-').toLowerCase()+".jpg", fotoFile);
+}else{
+zip.file(tutor.replace(/\s+/g,'-').toLowerCase()+".jpg", await fetchBlob("modelo-base/foto-tutor.jpg"));
 }
 
-/* GERAR ZIP */
-const blob = await zip.generateAsync({type:"blob"});
-const link = document.createElement("a");
-link.href = URL.createObjectURL(blob);
-link.download = "Projeto_"+nomeLimpo+".zip";
-link.click();
+zip.generateAsync({type:"blob"}).then(function(content){
+const a = document.createElement("a");
+a.href = URL.createObjectURL(content);
+a.download = projeto+".zip";
+a.click();
+});
 
 }
-
 </script>
 
 </body>
