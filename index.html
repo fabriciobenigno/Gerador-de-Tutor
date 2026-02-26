@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Gerador Interno do Repositório</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<style>
+body{
+font-family:Arial;
+background:linear-gradient(135deg,#004aad,#007bff);
+padding:40px;
+color:#fff;
+}
+.container{
+background:#fff;
+color:#000;
+padding:30px;
+border-radius:12px;
+max-width:1000px;
+margin:auto;
+}
+input{
+width:100%;
+padding:10px;
+margin-bottom:10px;
+border-radius:6px;
+border:1px solid #ccc;
+}
+button{
+padding:12px;
+border:none;
+border-radius:6px;
+background:#007bff;
+color:#fff;
+cursor:pointer;
+font-weight:bold;
+}
+button:hover{background:#0056b3}
+.section{margin-bottom:25px;}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h2>Gerador Automático (Arquivos Locais do Repositório)</h2>
+
+<div class="section">
+<h3>Dados do Tutor</h3>
+<input id="nomeTutor" placeholder="Nome do Tutor">
+<input id="whatsapp" placeholder="Link WhatsApp completo">
+<input id="instagram" placeholder="Link Instagram completo">
+</div>
+
+<div class="section">
+<h3>Dados Técnicos</h3>
+<input id="urlScript" placeholder="URL do App Script">
+<input id="idPlanilha" placeholder="ID da Planilha">
+<input id="gmail" placeholder="Gmail para Notificação">
+</div>
+
+<button onclick="gerarProjeto()">Gerar Projeto ZIP</button>
+
+</div>
+
+<script>
+
+function gerarNomeLimpo(nome){
+return nome
+.toLowerCase()
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+.replace(/[^a-z0-9\s]/g,"")
+.replace(/\s+/g,"-");
+}
+
+async function fetchTexto(caminho){
+const res = await fetch(caminho);
+return await res.text();
+}
+
+async function fetchBinario(caminho){
+const res = await fetch(caminho);
+return await res.arrayBuffer();
+}
+
+async function gerarProjeto(){
+
+const nome = document.getElementById("nomeTutor").value;
+const whatsapp = document.getElementById("whatsapp").value;
+const instagram = document.getElementById("instagram").value;
+const webApp = document.getElementById("urlScript").value;
+const idPlanilha = document.getElementById("idPlanilha").value;
+const gmail = document.getElementById("gmail").value;
+
+if(!nome){
+alert("Digite o nome do tutor.");
+return;
+}
+
+const nomeLimpo = gerarNomeLimpo(nome);
+const nomeFotoFinal = "foto-"+nomeLimpo+".jpg";
+
+const zip = new JSZip();
+const raiz = zip.folder("Projeto_"+nomeLimpo);
+const pastaAssets = raiz.folder("assets");
+const pastaPWA = raiz.folder("pwa");
+
+/* BUSCAR ARQUIVOS DO MODELO-BASE */
+let index1 = await fetchTexto("modelo-base/index.html");
+let index2 = await fetchTexto("modelo-base/index2.html");
+let appscript = await fetchTexto("modelo-base/appscript.txt");
+
+/* SUBSTITUIÇÕES */
+index1 = index1.replace(/Fabricio Benigno/g,nome);
+index2 = index2.replace(/Fabricio Benigno/g,nome);
+
+if(whatsapp){
+index1 = index1.replace(/https:\/\/wa\.me\/[0-9]+/g, whatsapp);
+index2 = index2.replace(/https:\/\/wa\.me\/[0-9]+/g, whatsapp);
+}
+
+if(instagram){
+index1 = index1.replace(/https:\/\/(www\.)?instagram\.com\/[^"]+/g, instagram);
+index2 = index2.replace(/https:\/\/(www\.)?instagram\.com\/[^"]+/g, instagram);
+}
+
+if(webApp){
+index1 = index1.replace(/const WEB_APP_URL\s*=\s*".*?";/g,'const WEB_APP_URL = "'+webApp+'";');
+index2 = index2.replace(/const WEB_APP_URL\s*=\s*".*?";/g,'const WEB_APP_URL = "'+webApp+'";');
+}
+
+if(idPlanilha){
+appscript = appscript.replace(/const ID_PLANILHA\s*=\s*".*?";/g,'const ID_PLANILHA = "'+idPlanilha+'";');
+}
+
+if(gmail){
+appscript = appscript.replace(/to:\s*".*?"/g,'to: "'+gmail+'"');
+}
+
+/* TROCAR FOTO */
+index1 = index1.replace(/src="[^"]+\.(jpg|jpeg|png|webp)"/g,'src="assets/'+nomeFotoFinal+'"');
+index2 = index2.replace(/src="[^"]+\.(jpg|jpeg|png|webp)"/g,'src="../assets/'+nomeFotoFinal+'"');
+
+/* SALVAR TEXTO */
+raiz.file("index.html", index1);
+pastaPWA.file("index2.html", index2);
+raiz.file("appscript.txt", appscript);
+
+/* ARQUIVOS BINÁRIOS */
+const arquivosPadrao = [
+"simbolo.png",
+"icone.ico",
+"whatsapp.ico",
+"instagram.ico",
+"confetes.mp4",
+"manifest.json",
+"sw.js",
+"foto-tutor.jpg"
+];
+
+for(let arquivo of arquivosPadrao){
+
+let bin = await fetchBinario("modelo-base/"+arquivo);
+
+if(arquivo === "manifest.json" || arquivo === "sw.js"){
+pastaPWA.file(arquivo, bin);
+}
+else if(arquivo === "foto-tutor.jpg"){
+pastaAssets.file(nomeFotoFinal, bin);
+}
+else{
+pastaAssets.file(arquivo, bin);
+}
+
+}
+
+/* GERAR ZIP */
+const blob = await zip.generateAsync({type:"blob"});
+const link = document.createElement("a");
+link.href = URL.createObjectURL(blob);
+link.download = "Projeto_"+nomeLimpo+".zip";
+link.click();
+
+}
+
+</script>
+
+</body>
+</html>
