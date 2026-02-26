@@ -10,43 +10,41 @@
 
 <style>
 body{
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg,#0d6efd,#0a58ca);
-    color:#fff;
-    padding:40px;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg,#004aad,#007bff);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:40px;
+  color:#fff;
 }
 .container{
-    max-width:600px;
-    margin:auto;
-    background:#ffffff10;
-    padding:30px;
-    border-radius:12px;
-    backdrop-filter: blur(10px);
+  background:#ffffff15;
+  backdrop-filter: blur(10px);
+  padding:30px;
+  border-radius:12px;
+  width:100%;
+  max-width:600px;
 }
-h1{
-    text-align:center;
-    margin-bottom:30px;
-}
+h1{text-align:center;margin-bottom:25px}
 input{
-    width:100%;
-    padding:10px;
-    margin-bottom:15px;
-    border:none;
-    border-radius:6px;
+  width:100%;
+  padding:10px;
+  margin-bottom:12px;
+  border:none;
+  border-radius:6px;
 }
 button{
-    width:100%;
-    padding:12px;
-    background:#fff;
-    color:#0d6efd;
-    font-weight:bold;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:6px;
+  background:#fff;
+  color:#004aad;
+  font-weight:bold;
+  cursor:pointer;
 }
-button:hover{
-    opacity:0.9;
-}
+button:hover{opacity:.9}
 </style>
 </head>
 <body>
@@ -55,11 +53,11 @@ button:hover{
 <h1>Gerador de Projeto</h1>
 
 <input type="text" id="nomeTutor" placeholder="Nome do Tutor">
-<input type="text" id="whatsapp" placeholder="Link do WhatsApp">
-<input type="text" id="instagram" placeholder="Link do Instagram">
-<input type="text" id="appscript" placeholder="URL do App Script">
+<input type="text" id="whatsapp" placeholder="Link completo do WhatsApp">
+<input type="text" id="instagram" placeholder="Link completo do Instagram">
+<input type="text" id="appscript" placeholder="URL completa do App Script">
 <input type="text" id="planilha" placeholder="ID da Planilha">
-<input type="text" id="gmail" placeholder="Gmail">
+<input type="text" id="gmail" placeholder="Gmail para receber notificações">
 <input type="file" id="foto" accept="image/*">
 
 <button onclick="gerarProjeto()">Gerar Projeto.zip</button>
@@ -68,106 +66,160 @@ button:hover{
 <script>
 async function gerarProjeto(){
 
-    const nomeTutor = document.getElementById("nomeTutor").value.trim();
-    const whatsapp = document.getElementById("whatsapp").value.trim();
-    const instagram = document.getElementById("instagram").value.trim();
-    const appscript = document.getElementById("appscript").value.trim();
-    const planilha = document.getElementById("planilha").value.trim();
-    const gmail = document.getElementById("gmail").value.trim();
-    const fotoInput = document.getElementById("foto");
+const nomeTutor = document.getElementById("nomeTutor").value.trim();
+const whatsapp = document.getElementById("whatsapp").value.trim();
+const instagram = document.getElementById("instagram").value.trim();
+const appscript = document.getElementById("appscript").value.trim();
+const planilha = document.getElementById("planilha").value.trim();
+const gmail = document.getElementById("gmail").value.trim();
+const fotoInput = document.getElementById("foto");
 
-    if(!nomeTutor || !whatsapp || !instagram || !appscript || !planilha || !gmail || !fotoInput.files[0]){
-        alert("Preencha todos os campos.");
-        return;
-    }
+if(!nomeTutor || !whatsapp || !instagram || !appscript || !planilha || !gmail || !fotoInput.files[0]){
+alert("Preencha todos os campos.");
+return;
+}
 
-    const zip = new JSZip();
+const zip = new JSZip();
 
-    // Função fetch base
-    async function fetchBase(file){
-        const response = await fetch("modelo-base/" + file);
-        if(!response.ok) throw new Error("Erro ao carregar " + file);
-        return await response.text();
-    }
+async function fetchText(file){
+const r = await fetch("modelo-base/"+file);
+if(!r.ok) throw new Error("Erro ao carregar "+file);
+return await r.text();
+}
 
-    async function fetchBaseBlob(file){
-        const response = await fetch("modelo-base/" + file);
-        if(!response.ok) throw new Error("Erro ao carregar " + file);
-        return await response.blob();
-    }
+async function fetchBlob(file){
+const r = await fetch("modelo-base/"+file);
+if(!r.ok) throw new Error("Erro ao carregar "+file);
+return await r.blob();
+}
 
-    try{
+try{
 
-        // ===== INDEX.HTML =====
-        let indexHtml = await fetchBase("index.html");
+/* ===========================
+   PADRÃO DE NOME DA FOTO
+=========================== */
+const novoNomeFoto = nomeTutor
+.toLowerCase()
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+.replace(/\s+/g,"-") + ".jpg";
 
-        indexHtml = indexHtml
-            .replace(/Tutor Responsável:[^<]+/g, "Tutor Responsável: " + nomeTutor)
-            .replace(/https:\/\/wa\.me\/[0-9]+/g, whatsapp)
-            .replace(/https:\/\/instagram\.com\/[^\"]+/g, instagram)
-            .replace(/https:\/\/script\.google\.com\/macros\/s\/[^\"]+/g, appscript)
-            .replace(/foto-tutor\.(jpg|png|jpeg)/g, nomeTutor + ".jpg");
+/* ===========================
+   INDEX.HTML
+=========================== */
+let indexHtml = await fetchText("index.html");
 
-        zip.file("index.html", indexHtml);
+// Nome tutor
+indexHtml = indexHtml.replace(
+/<div class="tutor-name">.*?<\/div>/,
+`<div class="tutor-name">${nomeTutor}</div>`
+);
 
-        // ===== INDEX2.HTML =====
-        let index2Html = await fetchBase("index2.html");
+// Foto tutor
+indexHtml = indexHtml.replace(
+/<img class="tutor-photo" src=".*?">/,
+`<img class="tutor-photo" src="${novoNomeFoto}">`
+);
 
-        index2Html = index2Html
-            .replace(/https:\/\/script\.google\.com\/macros\/s\/[^\"]+/g, appscript)
-            .replace(/[A-Za-z0-9_-]{40,}/g, planilha);
+// WhatsApp
+indexHtml = indexHtml.replace(
+/href="https:\/\/wa\.me\/[^"]*"/,
+`href="${whatsapp}"`
+);
 
-        zip.folder("painel").file("index2.html", index2Html);
+// Instagram (botão + redirect)
+indexHtml = indexHtml.replace(
+/https:\/\/instagram\.com\/[^\"]+/g,
+instagram
+);
 
-        // ===== APPSCRIPT.TXT =====
-        let appscriptTxt = await fetchBase("appscript.txt");
+// App Script
+indexHtml = indexHtml.replace(
+/const WEB_APP_URL = ".*?";/,
+`const WEB_APP_URL = "${appscript}";`
+);
 
-        appscriptTxt = appscriptTxt
-            .replace(/[a-zA-Z0-9._%+-]+@gmail\.com/g, gmail)
-            .replace(/https:\/\/script\.google\.com\/macros\/s\/[^\"]+/g, appscript)
-            .replace(/[A-Za-z0-9_-]{40,}/g, planilha);
+zip.file("index.html", indexHtml);
 
-        zip.file("appscript.txt", appscriptTxt);
+/* ===========================
+   INDEX2.HTML
+=========================== */
+let index2Html = await fetchText("index2.html");
 
-        // ===== ARQUIVOS FIXOS =====
-        const arquivosRaiz = [
-            "simbolo.png",
-            "icone.ico",
-            "whatsapp.ico",
-            "instagram.ico",
-            "confetes.mp4"
-        ];
+// App Script
+index2Html = index2Html.replace(
+/const WEB_APP_URL=".*?";/,
+`const WEB_APP_URL="${appscript}";`
+);
 
-        for(const file of arquivosRaiz){
-            const blob = await fetchBaseBlob(file);
-            zip.file(file, blob);
-        }
+// Nome tutor template
+index2Html = index2Html.replace(
+/TUTOR:.*?🥷/,
+`TUTOR:${nomeTutor} 🥷`
+);
 
-        const arquivosPainel = [
-            "manifest.json",
-            "sw.js"
-        ];
+zip.folder("painel").file("index2.html", index2Html);
 
-        for(const file of arquivosPainel){
-            const blob = await fetchBaseBlob(file);
-            zip.folder("painel").file(file, blob);
-        }
+/* ===========================
+   APPSCRIPT.TXT
+=========================== */
+let appscriptTxt = await fetchText("appscript.txt");
 
-        // ===== FOTO =====
-        const fotoFile = fotoInput.files[0];
-        const novaFotoNome = nomeTutor.replace(/\s+/g,"-").toLowerCase() + ".jpg";
-        zip.file(novaFotoNome, fotoFile);
+// ID planilha
+appscriptTxt = appscriptTxt.replace(
+/const ID_PLANILHA = ".*?";/,
+`const ID_PLANILHA = "${planilha}";`
+);
 
-        // ===== GERAR ZIP =====
-        const content = await zip.generateAsync({type:"blob"});
-        saveAs(content, "Projeto.zip");
+// Gmail
+appscriptTxt = appscriptTxt.replace(
+/to:\s*".*?"/,
+`to: "${gmail}"`
+);
 
-        alert("Projeto gerado com sucesso!");
+zip.file("appscript.txt", appscriptTxt);
 
-    }catch(erro){
-        console.error(erro);
-        alert("Erro ao gerar projeto.");
-    }
+/* ===========================
+   ARQUIVOS FIXOS RAIZ
+=========================== */
+const arquivosRaiz = [
+"simbolo.png",
+"icone.ico",
+"whatsapp.ico",
+"instagram.ico",
+"confetes.mp4"
+];
+
+for(const file of arquivosRaiz){
+zip.file(file, await fetchBlob(file));
+}
+
+/* ===========================
+   ARQUIVOS PAINEL
+=========================== */
+const arquivosPainel = ["manifest.json","sw.js"];
+
+for(const file of arquivosPainel){
+zip.folder("painel").file(file, await fetchBlob(file));
+}
+
+/* ===========================
+   FOTO
+=========================== */
+zip.file(novoNomeFoto, fotoInput.files[0]);
+
+/* ===========================
+   GERAR ZIP
+=========================== */
+const content = await zip.generateAsync({type:"blob"});
+saveAs(content,"Projeto.zip");
+
+alert("Projeto gerado com sucesso!");
+
+}catch(erro){
+console.error(erro);
+alert("Erro ao gerar projeto.");
+}
 
 }
 </script>
