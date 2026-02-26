@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Gerador de Projetos</title>
+<title>Gerador de Projeto</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -81,22 +81,30 @@ return;
 
 const zip = new JSZip();
 
+/* ===========================
+   BASE PATH SEGURO
+=========================== */
+const basePath = window.location.origin + window.location.pathname.replace(/index\.html$/,'');
+
+/* ===========================
+   FUNÇÕES FETCH
+=========================== */
 async function fetchText(file){
-const r = await fetch("modelo-base/"+file);
-if(!r.ok) throw new Error("Erro ao carregar "+file);
-return await r.text();
+  const r = await fetch(basePath + "modelo-base/" + file);
+  if(!r.ok) throw new Error("Erro ao carregar "+file);
+  return await r.text();
 }
 
 async function fetchBlob(file){
-const r = await fetch("modelo-base/"+file);
-if(!r.ok) throw new Error("Erro ao carregar "+file);
-return await r.blob();
+  const r = await fetch(basePath + "modelo-base/" + file);
+  if(!r.ok) throw new Error("Erro ao carregar "+file);
+  return await r.blob();
 }
 
 try{
 
 /* ===========================
-   PADRÃO DE NOME DA FOTO
+   NOME FOTO PADRÃO
 =========================== */
 const novoNomeFoto = nomeTutor
 .toLowerCase()
@@ -109,31 +117,26 @@ const novoNomeFoto = nomeTutor
 =========================== */
 let indexHtml = await fetchText("index.html");
 
-// Nome tutor
 indexHtml = indexHtml.replace(
 /<div class="tutor-name">.*?<\/div>/,
 `<div class="tutor-name">${nomeTutor}</div>`
 );
 
-// Foto tutor
 indexHtml = indexHtml.replace(
 /<img class="tutor-photo" src=".*?">/,
 `<img class="tutor-photo" src="${novoNomeFoto}">`
 );
 
-// WhatsApp
 indexHtml = indexHtml.replace(
 /href="https:\/\/wa\.me\/[^"]*"/,
 `href="${whatsapp}"`
 );
 
-// Instagram (botão + redirect)
 indexHtml = indexHtml.replace(
 /https:\/\/instagram\.com\/[^\"]+/g,
 instagram
 );
 
-// App Script
 indexHtml = indexHtml.replace(
 /const WEB_APP_URL = ".*?";/,
 `const WEB_APP_URL = "${appscript}";`
@@ -146,13 +149,11 @@ zip.file("index.html", indexHtml);
 =========================== */
 let index2Html = await fetchText("index2.html");
 
-// App Script
 index2Html = index2Html.replace(
 /const WEB_APP_URL=".*?";/,
 `const WEB_APP_URL="${appscript}";`
 );
 
-// Nome tutor template
 index2Html = index2Html.replace(
 /TUTOR:.*?🥷/,
 `TUTOR:${nomeTutor} 🥷`
@@ -165,13 +166,11 @@ zip.folder("painel").file("index2.html", index2Html);
 =========================== */
 let appscriptTxt = await fetchText("appscript.txt");
 
-// ID planilha
 appscriptTxt = appscriptTxt.replace(
 /const ID_PLANILHA = ".*?";/,
 `const ID_PLANILHA = "${planilha}";`
 );
 
-// Gmail
 appscriptTxt = appscriptTxt.replace(
 /to:\s*".*?"/,
 `to: "${gmail}"`
@@ -218,7 +217,7 @@ alert("Projeto gerado com sucesso!");
 
 }catch(erro){
 console.error(erro);
-alert("Erro ao gerar projeto.");
+alert("Erro ao gerar projeto. Verifique o console (F12).");
 }
 
 }
